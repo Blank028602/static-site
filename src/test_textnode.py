@@ -118,7 +118,45 @@ class TestTextNode(unittest.TestCase):
 		self.assertListEqual([TextNode("This is text with an ", TextType.TEXT_PLAIN), TextNode("link", TextType.LINK, "https://i.imgur.com/zjjcJKZ.png"), TextNode(" and another ", TextType.TEXT_PLAIN),
 		TextNode("second link", TextType.LINK, "https://i.imgur.com/3elNhQu.png")], new_nodes)
 
+	def test_split_images_no_text(self):
+		node = TextNode("![image](https://i.imgur.com/zjjcJKZ.png)![second image](https://i.imgur.com/3elNhQu.png)", TextType.TEXT_PLAIN)
+		new_nodes = TextNode.split_nodes_image([node])
+		self.assertListEqual([TextNode("image", TextType.IMAGES, "https://i.imgur.com/zjjcJKZ.png"), TextNode("second image", TextType.IMAGES, "https://i.imgur.com/3elNhQu.png")], new_nodes)
 
+	def test_split_links_no_text(self):
+		node = TextNode("[link](https://i.imgur.com/zjjcJKZ.png)[second link](https://i.imgur.com/3elNhQu.png)", TextType.TEXT_PLAIN)
+		new_nodes = TextNode.split_nodes_link([node])
+		self.assertListEqual([TextNode("link", TextType.LINK, "https://i.imgur.com/zjjcJKZ.png"), TextNode("second link", TextType.LINK, "https://i.imgur.com/3elNhQu.png")], new_nodes)
+
+	def test_split_images_only_text(self):
+		node = TextNode("This node only contains text.", TextType.TEXT_PLAIN)
+		new_nodes = TextNode.split_nodes_image([node])
+		self.assertListEqual([TextNode("This node only contains text.", TextType.TEXT_PLAIN)], new_nodes)
+
+	def test_split_links_only_text(self):
+		node = TextNode("This node only contains text.", TextType.TEXT_PLAIN)
+		new_nodes = TextNode.split_nodes_link([node])
+		self.assertListEqual([TextNode("This node only contains text.", TextType.TEXT_PLAIN)], new_nodes)
+
+	def test_split_images_nothing(self):
+		node = TextNode("", TextType.TEXT_PLAIN)
+		new_nodes = TextNode.split_nodes_image([node])
+		self.assertListEqual([TextNode("", TextType.TEXT_PLAIN)], new_nodes)
+
+	def test_split_links_nothing(self):
+		node = TextNode("", TextType.TEXT_PLAIN)
+		new_nodes = TextNode.split_nodes_link([node])
+		self.assertListEqual([TextNode("", TextType.TEXT_PLAIN)], new_nodes)
+
+	def test_split_images_one(self):
+		node = TextNode("![image](https://i.imgur.com/zjjcJKZ.png)", TextType.TEXT_PLAIN)
+		new_nodes = TextNode.split_nodes_image([node])
+		self.assertListEqual([TextNode("image", TextType.IMAGES, "https://i.imgur.com/zjjcJKZ.png")], new_nodes)
+
+	def test_split_links_one(self):
+		node = TextNode("[link](https://i.imgur.com/zjjcJKZ.png)", TextType.TEXT_PLAIN)
+		new_nodes = TextNode.split_nodes_link([node])
+		self.assertListEqual([TextNode("link", TextType.LINK, "https://i.imgur.com/zjjcJKZ.png")], new_nodes)
 
 
 
