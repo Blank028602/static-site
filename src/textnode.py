@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 from htmlnode import LeafNode, ParentNode
 
@@ -62,3 +63,93 @@ class TextNode:
 			node_3 = TextNode(node_list[2], old_node.text_type)
 			text_nodes.append(node_3)
 		return text_nodes
+
+	def extract_markdown_images(text):
+		match = re.findall(r"!\[(.*?)\]\((.*?)\)", text)
+		return match
+
+	def extract_markdown_links(text):
+		match = re.findall(r"(?<!!)\[(.*?)\]\((.*?)\)", text)
+		return match
+
+	def split_nodes_image(old_nodes):
+		text_nodes = []
+		for old_node in old_nodes:
+			text = old_node.text
+			images = TextNode.extract_markdown_images(text)
+			if images == []:
+				text_nodes.append(old_node)
+				continue
+			first_image = images[0]
+			image_alt = first_image[0]
+			image_url = first_image[1]
+			full_image_markdown = f"![{image_alt}]({image_url})"
+			parts = text.split(full_image_markdown, 1)
+			if parts[0] != "":
+				node_1 = TextNode(parts[0], TextType.TEXT_PLAIN)
+				text_nodes.append(node_1)
+			node_2 = TextNode(image_alt, TextType.IMAGES, image_url)
+			text_nodes.append(node_2)
+			if parts[1] != "":
+				node_3 = TextNode(parts[1], TextType.TEXT_PLAIN)
+				remaining_nodes = TextNode.split_nodes_image([node_3])
+				text_nodes.extend(remaining_nodes)
+		return text_nodes
+
+	def split_nodes_link(old_nodes):
+		text_nodes = []
+		for old_node in old_nodes:
+			text = old_node.text
+			links = TextNode.extract_markdown_links(text)
+			if links == []:
+				text_nodes.append(old_node)
+				continue
+			first_link = links[0]
+			link_alt = first_link[0]
+			link_url = first_link[1]
+			full_link_markdown = f"[{link_alt}]({link_url})"
+			parts = text.split(full_link_markdown, 1)
+			if parts[0] != "":
+				node_1 = TextNode(parts[0], TextType.TEXT_PLAIN)
+				text_nodes.append(node_1)
+			node_2 = TextNode(link_alt, TextType.LINK, link_url)
+			text_nodes.append(node_2)
+			if parts[1] != "":
+				node_3 = TextNode(parts[1], TextType.TEXT_PLAIN)
+				remaining_nodes = TextNode.split_nodes_link([node_3])
+				text_nodes.extend(remaining_nodes)
+		return text_nodes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
