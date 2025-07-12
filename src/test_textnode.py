@@ -158,6 +158,20 @@ class TestTextNode(unittest.TestCase):
 		new_nodes = TextNode.split_nodes_link([node])
 		self.assertListEqual([TextNode("link", TextType.LINK, "https://i.imgur.com/zjjcJKZ.png")], new_nodes)
 
+	def test_text_to_textnodes(self):
+		text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+		nodes = TextNode.text_to_textnodes(text)
+		self.assertListEqual([
+			TextNode("This is ", TextType.TEXT_PLAIN),
+			TextNode("text", TextType.TEXT_BOLD),
+			TextNode(" with an ", TextType.TEXT_PLAIN),
+			TextNode("italic", TextType.TEXT_ITALIC),
+			TextNode(" word and a ", TextType.TEXT_PLAIN),
+			TextNode("code block", TextType.TEXT_CODE),
+			TextNode(" and an ", TextType.TEXT_PLAIN),
+			TextNode("obi wan image", TextType.IMAGES, "https://i.imgur.com/fJRm4Vk.jpeg"),
+			TextNode(" and a ", TextType.TEXT_PLAIN),
+			TextNode("link", TextType.LINK, "https://boot.dev")], nodes)
 
 
 

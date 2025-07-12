@@ -52,7 +52,7 @@ class TextNode:
 				text_nodes.append(old_node)
 				continue
 			if char_to_find not in old_node.text:
-				raise Exception("the given delimiter is not in the text")
+				return [old_node]
 			node_list = old_node.text.split(delimiter)
 			if len(node_list) < 3 or len(node_list) > 3:
 				raise Exception("thats invalid Markdown syntax")
@@ -120,6 +120,23 @@ class TextNode:
 				text_nodes.extend(remaining_nodes)
 		return text_nodes
 
+	def text_to_textnodes(text):
+		nodes = [TextNode(text, TextType.TEXT_PLAIN)]
+		splitters = [
+			(TextNode.split_nodes_image, []),
+			(TextNode.split_nodes_link, []),
+			(TextNode.split_nodes_delimiter, ["**", TextType.TEXT_BOLD]),
+			(TextNode.split_nodes_delimiter, ["_", TextType.TEXT_ITALIC]),
+			(TextNode.split_nodes_delimiter, ["`", TextType.TEXT_CODE])]
+		for splitter, args in splitters:
+			new_nodes = []
+			for node in nodes:
+				if node.text_type == TextType.TEXT_PLAIN:
+					new_nodes.extend(splitter([node], *args) if args else splitter ([node]))
+				else:
+					new_nodes.append(node)
+			nodes = new_nodes
+		return [node for node in nodes if node.text != ""]
 
 
 
