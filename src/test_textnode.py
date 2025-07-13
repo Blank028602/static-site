@@ -173,6 +173,50 @@ class TestTextNode(unittest.TestCase):
 			TextNode(" and a ", TextType.TEXT_PLAIN),
 			TextNode("link", TextType.LINK, "https://boot.dev")], nodes)
 
+	def test_markdown_to_block(self):
+		md = """
+This is **bolded** paragraph
+
+This is another paragraph with _italic_ text and `code` here
+This is the same paragraph on a new line
+
+- This is a list
+- with items
+"""
+
+		blocks = TextNode.markdown_to_blocks(md)
+		self.assertEqual(blocks,["This is **bolded** paragraph", "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line", "- This is a list\n- with items"])
+
+	def test_markdown_to_block_empty(self):
+		md = ""
+		blocks = TextNode.markdown_to_blocks(md)
+		self.assertEqual(blocks, [])
+
+	def test_markdown_to_block_many_blank_lines(self):
+		md = """
+
+
+
+
+
+
+"""
+		blocks = TextNode.markdown_to_blocks(md)
+		self.assertEqual(blocks, [])
+
+	def test_markdown_to_block_only_whitespace(self):
+		md = """
+                                                               
+"""
+		blocks = TextNode.markdown_to_blocks(md)
+		self.assertEqual(blocks, [])
+
+	def test_markdown_to_block_single_block(self):
+		md = """
+# This is a heading
+"""
+		blocks = TextNode.markdown_to_blocks(md)
+		self.assertEqual(blocks, ["# This is a heading"])
 
 
 

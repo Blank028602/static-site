@@ -138,6 +138,16 @@ class TextNode:
 			nodes = new_nodes
 		return [node for node in nodes if node.text != ""]
 
+	def markdown_to_blocks(markdown):
+		markdown = markdown.strip()
+		list = markdown.split("\n\n")
+		final_list = []
+		for block in list:
+			new_block = block.strip()
+			if new_block == "":
+				continue
+			final_list.append(new_block)
+		return final_list
 
 
 
