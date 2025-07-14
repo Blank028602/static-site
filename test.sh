@@ -1,2 +1,2 @@
-python3 -m unittest discover -s src -k "textnode"
-
+cd "$(dirname "$0")/src"
+python3 -m unittest test_block
