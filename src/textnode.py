@@ -1,6 +1,7 @@
 import re
 from enum import Enum
-from htmlnode import LeafNode, ParentNode
+from htmlnode import HTMLNode, LeafNode, ParentNode
+from block import BlockType, block_to_block_type
 
 class TextType(Enum):
 	TEXT_PLAIN = "plain text"
@@ -26,6 +27,7 @@ class TextNode:
 	def __repr__(self):
 		return f"TextNode({self.text}, {self.text_type.value}, {self.url})"
 
+	@staticmethod
 	def text_node_to_html_node(text_node):
 		if text_node.text_type == TextType.TEXT_PLAIN:
 			return LeafNode(None, text_node.text)
@@ -44,6 +46,7 @@ class TextNode:
 		else:
 			raise Exception("isnt part of TextType")
 
+	@staticmethod
 	def split_nodes_delimiter(old_nodes, delimiter, text_type):
 		text_nodes = []
 		for old_node in old_nodes:
@@ -64,14 +67,17 @@ class TextNode:
 			text_nodes.append(node_3)
 		return text_nodes
 
+	@staticmethod
 	def extract_markdown_images(text):
 		match = re.findall(r"!\[(.*?)\]\((.*?)\)", text)
 		return match
 
+	@staticmethod
 	def extract_markdown_links(text):
 		match = re.findall(r"(?<!!)\[(.*?)\]\((.*?)\)", text)
 		return match
 
+	@staticmethod
 	def split_nodes_image(old_nodes):
 		text_nodes = []
 		for old_node in old_nodes:
@@ -96,6 +102,7 @@ class TextNode:
 				text_nodes.extend(remaining_nodes)
 		return text_nodes
 
+	@staticmethod
 	def split_nodes_link(old_nodes):
 		text_nodes = []
 		for old_node in old_nodes:
@@ -120,6 +127,7 @@ class TextNode:
 				text_nodes.extend(remaining_nodes)
 		return text_nodes
 
+	@staticmethod
 	def text_to_textnodes(text):
 		nodes = [TextNode(text, TextType.TEXT_PLAIN)]
 		splitters = [
@@ -138,6 +146,7 @@ class TextNode:
 			nodes = new_nodes
 		return [node for node in nodes if node.text != ""]
 
+	@staticmethod
 	def markdown_to_blocks(markdown):
 		markdown = markdown.strip()
 		list = markdown.split("\n\n")
@@ -149,6 +158,85 @@ class TextNode:
 			final_list.append(new_block)
 		return final_list
 
+	@staticmethod
+	def text_to_children(text):
+		text_nodes = TextNode.text_to_textnodes(text)
+		html_nodes = []
+		for text_node in text_nodes:
+			html_node = TextNode.text_node_to_html_node(text_node)
+			html_nodes.append(html_node)
+		return html_nodes
+
+	@staticmethod
+	def markdown_to_html_node(markdown):
+		mblocks = TextNode.markdown_to_blocks(markdown)
+		block_nodes = []
+		for mblock in mblocks:
+			mblock_type = block_to_block_type(mblock)
+			if mblock_type == BlockType.PARAGRAPH:
+				node = ParentNode("p", None)
+				paragraph_text = mblock.replace("\n", " ")
+				children = TextNode.text_to_children(paragraph_text)
+				node = ParentNode("p", children)
+				block_nodes.append(node)
+			elif mblock_type == BlockType.HEADING:
+				heading_level = 0
+				for char in mblock:
+					if char == "#":
+						heading_level += 1
+					else:
+						break
+				tag = f"h{heading_level}"
+				node = ParentNode(tag, None)
+				heading_text = mblock[heading_level:].strip()
+				children = TextNode.text_to_children(heading_text)
+				node = ParentNode(tag, children)
+				block_nodes.append(node)
+			elif mblock_type == BlockType.CODE:
+				lines = mblock.split("\n")
+				code_lines = lines[1:-1]
+				code_content = "\n".join(code_lines) + "\n"
+				text_node = TextNode(code_content, TextType.TEXT_PLAIN)
+				code_child = TextNode.text_node_to_html_node(text_node)
+				code_node = ParentNode("code", [code_child])
+				node = ParentNode("pre", [code_node])
+				block_nodes.append(node)
+			elif mblock_type == BlockType.QUOTE:
+				node = ParentNode("blockquote", None)
+				quote_text = mblock[1:].strip()
+				children = TextNode.text_to_children(quote_text)
+				node = ParentNode("blockquote", children)
+				block_nodes.append(node)
+			elif mblock_type == BlockType.UNORDERED_LIST:
+				child_list = []
+				items = mblock.split("\n")
+				for item in items:
+					parts = item.split(" ", 1)
+					if len(parts) > 1:
+						item_text = parts[1]
+					else:
+						item_text = ""
+					children = TextNode.text_to_children(item_text)
+					child_node = ParentNode("li", children)
+					child_list.append(child_node)
+				node = ParentNode("ul", child_list)
+				block_nodes.append(node)
+			elif mblock_type == BlockType.ORDERED_LIST:
+				child_list = []
+				items = mblock.split("\n")
+				for item in items:
+					parts = item.split(" ", 1)
+					if len(parts) > 1:
+						item_text = parts[1]
+					else:
+						item_text = ""
+					children = TextNode.text_to_children(item_text)
+					child_node = ParentNode("li", children)
+					child_list.append(child_node)
+				node = ParentNode("ol", child_list)
+				block_nodes.append(node)
+		parent_node = ParentNode("div", block_nodes)
+		return parent_node
 
 
 
