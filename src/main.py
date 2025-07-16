@@ -1,6 +1,7 @@
 import os
 import shutil
 from textnode import TextNode, TextType
+from htmlnode import LeafNode, ParentNode
 
 def copy(public, static):
 	if os.path.exists(public):
@@ -21,6 +22,19 @@ def copy(public, static):
 			path_s = os.path.join(static, item)
 			copy(path_p, path_s)
 
+def generate_page(from_path, template_path, dest_path):
+	print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+	content_from_path = from_path.read()
+	content_temp_path = template_path.read()
+	markdown = TextNode.markdown_to_html_node(content_from_path)
+	html = markdown.to_html()
+	title = TextNode.extract_title(content_from_path)
+	output_html = content_temp_path.replace("{{ Title }}", title)
+	output_html = output_html.replace("{{ Content }}", html)
+	dir_path = os.path.dirname(dest_path)
+	os.makedirs(dir_path, exist_ok = True)
+	with open(dest_path, "w") as f:
+		f.write(output_html)
 
 
 
@@ -29,5 +43,8 @@ def main():
 	static = "static"
 	copy(public, static)
 	print("Static content copied successfully!")
+	with open("content/index.md") as from_file, open("template.html") as template_file:
+		generate_page(from_file, template_file, "public/index.html")
+
 main()
 

@@ -238,6 +238,17 @@ class TextNode:
 		parent_node = ParentNode("div", block_nodes)
 		return parent_node
 
+	@staticmethod
+	def extract_title(markdown):
+		lines = markdown.split("\n")
+		for line in lines:
+			line = line.strip()
+			if line.startswith("# "):
+				line = line[2:]
+				line = line.strip()
+				return line
+		raise Exception("no h1 header")
+
 
 
 

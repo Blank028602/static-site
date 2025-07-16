@@ -242,8 +242,14 @@ the **same** even with inline stuff
 		html = node.to_html()
 		self.assertEqual(html, "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>")
 
+	def test_extract_title(self):
+		md = "# Hello"
+		title = TextNode.extract_title(md)
+		self.assertEqual(title, "Hello")
 
-
+	def test_extract_title_no_title(self):
+		with self.assertRaises(Exception):
+			extract_title("No headers here!\nJust some text.")
 
 
 
