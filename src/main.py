@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 from textnode import TextNode, TextType
 from htmlnode import LeafNode, ParentNode
 
@@ -22,7 +23,7 @@ def copy(public, static):
 			path_s = os.path.join(static, item)
 			copy(path_p, path_s)
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
 	with open(from_path) as md_1:
 		content_from_path = md_1.read()
 	with open(template_path) as md_2:
@@ -32,12 +33,14 @@ def generate_page(from_path, template_path, dest_path):
 	title = TextNode.extract_title(content_from_path)
 	output_html = content_temp_path.replace("{{ Title }}", title)
 	output_html = output_html.replace("{{ Content }}", html)
+	output_html = output_html.replace('href="/', f'href="{basepath}')
+	output_html = output_html.replace('src="/', f'src="{basepath}')
 	dir_path = os.path.dirname(dest_path)
 	os.makedirs(dir_path, exist_ok = True)
 	with open(dest_path, "w") as f:
 		f.write(output_html)
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
 	list_items = os.listdir(dir_path_content)
 	for item in list_items:
 		path = os.path.join(dir_path_content, item)
@@ -45,12 +48,12 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
 			root, ext = os.path.splitext(item)
 			full_name = root + ".html"
 			full_html_path = os.path.join(dest_dir_path, full_name)
-			generate_page(path, template_path, full_html_path)
+			generate_page(path, template_path, full_html_path, basepath)
 		elif os.path.isfile(path):
 			continue
 		else:
 			dest_path = os.path.join(dest_dir_path, item)
-			generate_pages_recursive(path, template_path, dest_path)
+			generate_pages_recursive(path, template_path, dest_path, basepath)
 
 def convert_to_html(directory):
 	list_items = os.listdir(directory)
@@ -77,11 +80,15 @@ def convert_to_html(directory):
 			convert_to_html(path)
 
 def main():
-	public = "public"
+	if len(sys.argv) > 1:
+		basepath = sys.argv[1]
+	else:
+		basepath = "/"
+	public = "docs"
 	static = "static"
 	content = "content"
 	copy(public, static)
-	generate_pages_recursive(content, "template.html", public)
+	generate_pages_recursive(content, "template.html", public, basepath)
 
 main()
 
