@@ -23,9 +23,10 @@ def copy(public, static):
 			copy(path_p, path_s)
 
 def generate_page(from_path, template_path, dest_path):
-	print(f"Generating page from {from_path} to {dest_path} using {template_path}")
-	content_from_path = from_path.read()
-	content_temp_path = template_path.read()
+	with open(from_path) as md_1:
+		content_from_path = md_1.read()
+	with open(template_path) as md_2:
+		content_temp_path = md_2.read()
 	markdown = TextNode.markdown_to_html_node(content_from_path)
 	html = markdown.to_html()
 	title = TextNode.extract_title(content_from_path)
@@ -35,6 +36,21 @@ def generate_page(from_path, template_path, dest_path):
 	os.makedirs(dir_path, exist_ok = True)
 	with open(dest_path, "w") as f:
 		f.write(output_html)
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+	list_items = os.listdir(dir_path_content)
+	for item in list_items:
+		path = os.path.join(dir_path_content, item)
+		if os.path.isfile(path) and item.endswith(".md"):
+			root, ext = os.path.splitext(item)
+			full_name = root + ".html"
+			full_html_path = os.path.join(dest_dir_path, full_name)
+			generate_page(path, template_path, full_html_path)
+		elif os.path.isfile(path):
+			continue
+		else:
+			dest_path = os.path.join(dest_dir_path, item)
+			generate_pages_recursive(path, template_path, dest_path)
 
 def convert_to_html(directory):
 	list_items = os.listdir(directory)
@@ -65,10 +81,7 @@ def main():
 	static = "static"
 	content = "content"
 	copy(public, static)
-	print("Static content copied successfully!")
-	convert_to_html(content)
-	with open("content/index.md") as from_file, open("template.html") as template_file:
-		generate_page(from_file, template_file, "public/index.html")
+	generate_pages_recursive(content, "template.html", public)
 
 main()
 
