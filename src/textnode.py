@@ -48,24 +48,26 @@ class TextNode:
 
 	@staticmethod
 	def split_nodes_delimiter(old_nodes, delimiter, text_type):
-		text_nodes = []
+		new_nodes = []
 		for old_node in old_nodes:
-			char_to_find = delimiter
 			if old_node.text_type != TextType.TEXT_PLAIN:
-				text_nodes.append(old_node)
+				new_nodes.append(old_node)
 				continue
-			if char_to_find not in old_node.text:
-				return [old_node]
-			node_list = old_node.text.split(delimiter)
-			if len(node_list) < 3 or len(node_list) > 3:
-				raise Exception("thats invalid Markdown syntax")
-			node_1 = TextNode(node_list[0], old_node.text_type)
-			text_nodes.append(node_1)
-			node_2 = TextNode(node_list[1], text_type)
-			text_nodes.append(node_2)
-			node_3 = TextNode(node_list[2], old_node.text_type)
-			text_nodes.append(node_3)
-		return text_nodes
+			parts = old_node.text.split(delimiter, 1)
+			if len(parts) < 2:
+				new_nodes.append(old_node)
+				continue
+			closing_delim_index = parts[1].find(delimiter)
+			if closing_delim_index == -1:
+				raise Exception("Invalid Markdown syntax: Unclosed delimiter")
+			text_between_delims = parts[1][:closing_delim_index]
+			text_after_second_delim = parts[1][closing_delim_index + len(delimiter):]
+			if parts[0] != "":
+				new_nodes.append(TextNode(parts[0], TextType.TEXT_PLAIN))
+			new_nodes.append(TextNode(text_between_delims, text_type))
+			remaining_nodes = TextNode.split_nodes_delimiter([TextNode(text_after_second_delim, TextType.TEXT_PLAIN)], delimiter, text_type)
+			new_nodes.extend(remaining_nodes)
+		return new_nodes
 
 	@staticmethod
 	def extract_markdown_images(text):

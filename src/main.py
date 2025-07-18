@@ -36,13 +36,37 @@ def generate_page(from_path, template_path, dest_path):
 	with open(dest_path, "w") as f:
 		f.write(output_html)
 
-
+def convert_to_html(directory):
+	list_items = os.listdir(directory)
+	for item in list_items:
+		path = os.path.join(directory, item)
+		if path == "content/index.md":
+			continue
+		elif os.path.isfile(path) and item.endswith(".md"):
+			with open(path) as md:
+				md_content = md.read()
+				html_node = TextNode.markdown_to_html_node(md_content)
+				html = html_node.to_html()
+			relative_path = os.path.relpath(path, "content")
+			html_path = os.path.join("public", relative_path)
+			root, ext = os.path.splitext(html_path)
+			final_html_path = root + ".html"
+			output_dir = os.path.dirname(final_html_path)
+			os.makedirs(output_dir, exist_ok = True)
+			with open(final_html_path, "w") as f:
+				f.write(html)
+		elif os.path.isfile(path):
+			continue
+		else:
+			convert_to_html(path)
 
 def main():
 	public = "public"
 	static = "static"
+	content = "content"
 	copy(public, static)
 	print("Static content copied successfully!")
+	convert_to_html(content)
 	with open("content/index.md") as from_file, open("template.html") as template_file:
 		generate_page(from_file, template_file, "public/index.html")
 
